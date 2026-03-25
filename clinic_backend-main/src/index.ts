@@ -1,7 +1,7 @@
 import express from 'express';
 import { prisma } from './prisma/prisma';
 import type { Exame, Usuario, TypeToken } from './prisma/generated/prisma/client';
-import { createHash } from './utils/createHash';
+import { compareHash, createHash } from './utils/createHash';
 
 const app = express();
 app.use(express.json())
@@ -29,8 +29,8 @@ app.get('/usuarios/:id', async (req, res) => {
   return res.status(200).json(usuario);
 })
 
-app.post("/usuarios", async (req, res) => {
-  console.log(req.body)
+// atualização de rota de para cadrastro 
+app.post("/cadastro", async (req, res) => {
   const dadosUsuario = req.body as Usuario
   const hash = await createHash(dadosUsuario.senha);
   const usuarioCriado = await prisma.usuario.create({
@@ -71,6 +71,31 @@ app.delete('/usuarios/:id', async (req, res) => {
     mensagem: "Usuário deletado com sucesso!",
     data: usuarioDeletado
   });
+})
+
+// Rota de login
+app.post("/login", async (req, res) => {
+  const { email, senha } = req.body as Pick<Usuario, 'email' | 'senha'>
+
+  const usuario = await prisma.usuario.findUnique({
+    where: { email }
+  })
+
+  if (!usuario) {
+    return res.status(401).json({ mensagem: "Credenciais inválidas." })
+  }
+
+  const senhaValida = await compareHash(senha, usuario.senha)
+
+  if (!senhaValida) {
+    return res.status(401).json({ mensagem: "Credenciais inválidas." })
+  }
+
+  const { senha: _, ...usuarioSemSenha } = usuario
+  return res.status(200).json({
+    mensagem: "Login realizado com sucesso!",
+    data: usuarioSemSenha
+  })
 })
 
 //Exames
