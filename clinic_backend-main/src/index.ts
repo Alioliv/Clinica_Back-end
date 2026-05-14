@@ -1,13 +1,46 @@
 import express from 'express';
+import { auth } from './middleware/auth';
+import cors from "cors"
+import { authRouter } from './router/auth';
+import { exameRouter } from './router/exame';
+import { usuarioRouter } from './router/usuario';
+
+const app = express();
+app.use(express.json())
+app.use(cors())
+const port = 3000;
+
+app.get('/', (req, res) => {
+  console.log(req)
+  res.send("Hello world")
+})
+
+app.use(authRouter)
+
+//midleware de autenticação
+app.use(auth)
+
+app.use(usuarioRouter)
+app.use(exameRouter)
+
+app.listen(port, () => {
+  console.log("Servidor ta de pé :p")
+})
+
+
+
+/*import express from 'express';
 import { prisma } from './prisma/prisma';
 import type { Exame, Usuario, TypeToken } from './prisma/generated/prisma/client';
 import { createHash } from './utils/createHash';
 import bcrypt from "bcrypt";
 import { signTokenAcesso, signTokenRefresh } from './utils/jwt';
 import { auth } from './middleware/auth';
+import cors from "cors"
 
 const app = express();
 app.use(express.json())
+app.use(cors())
 const port = 3000;
 
 app.get('/', (req, res) => {
@@ -216,4 +249,5 @@ app.delete('/exames/:id', async (req, res) => {
 
 app.listen(port, () => {
   console.log("Servidor ta de pé :p")
-})
+})*/
+
